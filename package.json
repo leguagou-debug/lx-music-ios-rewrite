@@ -29,6 +29,7 @@
     "@react-native/metro-config": "0.73.5",
     "@react-native/typescript-config": "0.73.1",
     "@types/crypto-js": "^4.2.2",
+    "@types/jest": "^30.0.0",
     "@types/react": "^18.2.6",
     "babel-jest": "^29.2.1",
     "typescript": "5.0.4"
