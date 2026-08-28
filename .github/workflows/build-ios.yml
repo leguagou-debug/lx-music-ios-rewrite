@@ -1,0 +1,84 @@
+name: Build iOS IPA (unsigned, for sideload)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ios-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-14
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: false
+
+      - name: Install CocoaPods
+        run: |
+          gem install cocoapods --no-document
+
+      - name: Select Xcode 15 (RN 0.73 friendly)
+        run: |
+          sudo xcode-select -s /Applications/Xcode_15.4.app || sudo xcode-select --print-path
+
+      - name: Install JS dependencies
+        run: npm install --no-audit --no-fund --legacy-peer-deps
+
+      - name: Install Pods
+        run: |
+          cd ios
+          pod install --repo-update
+
+      - name: Verify scheme is shared
+        run: |
+          test -f ios/LxMusicMobile.xcodeproj/xcshareddata/xcschemes/LxMusicMobile.xcscheme && echo "scheme shared OK" || { echo "scheme not shared"; exit 1; }
+
+      - name: Build unsigned archive
+        run: |
+          mkdir -p build
+          xcodebuild archive \
+            -workspace ios/LxMusicMobile.xcworkspace \
+            -scheme LxMusicMobile \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -archivePath build/LxMusicMobile.xcarchive \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            DEVELOPMENT_TEAM="" \
+            PROVISIONING_PROFILE="" \
+            | tail -40
+
+      - name: Package unsigned IPA
+        run: |
+          mkdir -p ipa/Payload
+          cp -r build/LxMusicMobile.xcarchive/Products/Applications/LxMusicMobile.app ipa/Payload/
+          cd ipa
+          zip -r ../LxMusicMobile.ipa Payload
+          ls -la ../LxMusicMobile.ipa
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LxMusicMobile-IPA
+          path: LxMusicMobile.ipa
+          if-no-files-found: error
+          retention-days: 30

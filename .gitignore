@@ -1,0 +1,27 @@
+# dependencies
+node_modules/
+.npm-cache/
+
+# iOS
+ios/Pods/
+ios/build/
+ios/DerivedData/
+*.ipa
+
+# macOS
+.DS_Store
+
+# Android
+android/build/
+android/app/build/
+*.keystore
+*.jks
+
+# Misc
+.env
+.env.*
+*.log
+.npm/
+.eslintcache
+.vscode/
+.idea/
