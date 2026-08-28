@@ -1,9 +1,9 @@
 /** 酷狗音乐源（kg）
  * 搜索/歌词 + 内置 m.kugou.com 播放地址
  */
-import { httpGetJson } from '../utils/request'
-import { decodeName } from '../utils/format'
-import type { MusicInfo, SearchResult, LyricInfo, Quality } from '../types'
+import { httpGetJson, httpGetText } from '../utils/request'
+import { decodeName, formatPlayCount } from '../utils/format'
+import type { MusicInfo, SearchResult, LyricInfo, Quality, SongListTag, SongListTagGroup, SongListResult, SongListDetail, Source } from '../types'
 
 const SEARCH_URL = 'https://songsearch.kugou.com/song_search_v2'
 
@@ -105,6 +105,92 @@ export const kg = {
     if (!dlBody?.content) throw new Error('获取歌词失败')
     const lyric = decodeName(Buffer.from(dlBody.content, 'base64').toString('utf-8'))
     return { lyric, translation: '' }
+  },
+
+  /** 歌单标签 */
+  async getSongListTags(): Promise<{ tags: SongListTagGroup[]; hotTag: SongListTag[]; source: Source }> {
+    const body = await httpGetJson('http://www2.kugou.kugou.com/yueku/v9/special/getSpecial?is_smarty=1&')
+    if (body?.status !== 1) throw new Error('获取歌单标签失败')
+    const data = body.data ?? {}
+    const tags: SongListTagGroup[] = Object.keys(data.tagids ?? {}).map(name => ({
+      name,
+      list: ((data.tagids[name]?.data ?? []).map((t: any) => ({
+        id: t.id,
+        name: t.name,
+        source: 'kg' as Source,
+      }))),
+    }))
+    const hotTag: SongListTag[] = Object.values(data.hotTag ?? {}).map((t: any) => ({
+      id: t.special_id,
+      name: t.special_name,
+      source: 'kg' as Source,
+    }))
+    return { tags, hotTag, source: 'kg' }
+  },
+
+  /** 歌单列表 */
+  async getSongList(sortId: string, tagId: string, page = 1): Promise<SongListResult> {
+    const url = `http://www2.kugou.kugou.com/yueku/v9/special/getSpecial?is_ajax=1&cdn=cdn&t=${sortId}&c=${tagId ?? ''}&p=${page}`
+    const body = await httpGetJson(url)
+    if (body?.status !== 1) throw new Error('获取歌单列表失败')
+    const rawList = body?.special_db ?? []
+    const list = rawList.map((item: any) => ({
+      play_count: formatPlayCount(item.total_play_count || item.play_count),
+      id: `id_${item.specialid}`,
+      author: item.nickname,
+      name: item.specialname,
+      img: item.img || item.imgurl,
+      total: item.songcount,
+      desc: item.intro,
+      source: 'kg' as Source,
+    }))
+    return { list, total: list.length, page, limit: 36, source: 'kg' }
+  },
+
+  /** 歌单详情 */
+  async getSongListDetail(id: string, _page = 1): Promise<SongListDetail> {
+    let realId = id.replace('id_', '')
+    // v9 special/single 页面内嵌 JSON
+    const html = await httpGetText(`http://www2.kugou.kugou.com/yueku/v9/special/single/${realId}-5-9999.html`)
+    const dataMatch = html.match(/global\.data\s*=\s*(\[[\s\S]*?\])\s*;/)
+    if (!dataMatch) throw new Error('获取歌单详情失败')
+    let rawList: any[] = []
+    try {
+      rawList = JSON.parse(dataMatch[1])
+    } catch {
+      throw new Error('获取歌单详情失败')
+    }
+    const list: MusicInfo[] = rawList.map((item: any) => {
+      const types: MusicInfo['types'] = []
+      const _types: MusicInfo['_types'] = {}
+      if (item.filesize) {
+        types.push({ type: '128k', size: sizeFormate(item.filesize), ...({ hash: item.hash } as any) })
+        _types['128k'] = { size: sizeFormate(item.filesize), hash: item.hash }
+      }
+      if (item.filesize_320) {
+        types.push({ type: '320k', size: sizeFormate(item.filesize_320), ...({ hash: item.hash_320 } as any) })
+        _types['320k'] = { size: sizeFormate(item.filesize_320), hash: item.hash_320 }
+      }
+      if (item.filesize_flac) {
+        types.push({ type: 'flac', size: sizeFormate(item.filesize_flac), ...({ hash: item.hash_flac } as any) })
+        _types.flac = { size: sizeFormate(item.filesize_flac), hash: item.hash_flac }
+      }
+      return {
+        name: decodeName(item.songname),
+        singer: decodeName(item.singername),
+        source: 'kg' as Source,
+        songmid: String(item.audio_id ?? item.hash ?? ''),
+        interval: Math.max(1, Math.floor((item.duration ?? 0) / 1000)),
+        albumName: decodeName(item.album_name || ''),
+        lrc: null,
+        img: null,
+        otherSource: null,
+        types,
+        _types,
+        typeUrl: {},
+      }
+    })
+    return { list, page: 1, limit: list.length, total: list.length, source: 'kg' }
   },
 }
 

@@ -4,6 +4,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import { MusicInfo } from '../types'
 import { getSourceName } from '../musicSdk'
 import { formatInterval } from '../utils/format'
+import { useTheme } from '../theme'
 
 interface Props {
   musicInfo: MusicInfo
@@ -28,6 +29,48 @@ const SongItem: React.FC<Props> = ({
   onLongPress,
   extra,
 }) => {
+  const t = useTheme()
+  const c = t.colors
+  const styles = StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 14,
+      paddingVertical: 9,
+      backgroundColor: 'transparent',
+    },
+    rowActive: {
+      backgroundColor: c.primaryLight,
+    },
+    index: {
+      width: 34,
+      fontSize: 14,
+      color: c.weakText,
+      textAlign: 'center',
+    },
+    activeText: {
+      color: c.primary,
+      fontWeight: '600',
+    },
+    main: {
+      flex: 1,
+      marginHorizontal: 6,
+    },
+    name: {
+      fontSize: 15,
+      color: c.text,
+    },
+    sub: {
+      fontSize: 12,
+      color: c.weakText,
+      marginTop: 2,
+    },
+    duration: {
+      fontSize: 12,
+      color: c.weakText,
+      marginLeft: 8,
+    },
+  })
   const renderContent = () => (
     <View style={[styles.row, isActive && styles.rowActive]}>
       {index != null && (
@@ -59,45 +102,5 @@ const SongItem: React.FC<Props> = ({
   }
   return renderContent()
 }
-
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    backgroundColor: '#ffffff',
-  },
-  rowActive: {
-    backgroundColor: '#eafaf0',
-  },
-  index: {
-    width: 34,
-    fontSize: 14,
-    color: '#8a8a93',
-    textAlign: 'center',
-  },
-  activeText: {
-    color: '#07c556',
-  },
-  main: {
-    flex: 1,
-    marginHorizontal: 6,
-  },
-  name: {
-    fontSize: 15,
-    color: '#1c1c1e',
-  },
-  sub: {
-    fontSize: 12,
-    color: '#8a8a93',
-    marginTop: 2,
-  },
-  duration: {
-    fontSize: 12,
-    color: '#b0b0b8',
-    marginLeft: 8,
-  },
-})
 
 export default SongItem

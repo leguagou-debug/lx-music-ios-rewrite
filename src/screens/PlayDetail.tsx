@@ -1,22 +1,218 @@
-/** 播放详情页（Modal 全屏）：封面 + 歌词 + 控制条 + 播放列表 */
+/** 播放详情页（Modal 全屏）：封面 + 歌词 + 控制条 + 播放列表 + 定时停止 + 音质切换 */
 import React, { useEffect, useMemo, useState } from 'react'
 import {
-  View, Text, TouchableOpacity, Image, Modal, FlatList, SafeAreaView, ActivityIndicator, ActionSheetIOS, StyleSheet,
+  View, Text, TouchableOpacity, Image, Modal, FlatList, SafeAreaView, ActivityIndicator, ActionSheetIOS, Alert, StyleSheet,
 } from 'react-native'
 import { Navigation } from 'react-native-navigation'
 import { useDispatch, useSelector } from 'react-redux'
 import { useProgress } from 'react-native-track-player'
 import { RootState } from '../store'
-import { playByIndex, playNext, playPrev, togglePlay, seekTo, setPlayRate } from '../core/player'
+import { playByIndex, playNext, playPrev, togglePlay, seekTo, setPlayRate, removeFromPlayList, clearPlayList, switchQuality } from '../core/player'
 import { setTogglePlayMethod } from '../store/player'
-import { getSource } from '../musicSdk'
-import { MusicInfo, TogglePlayMethod, playMethodNames } from '../types'
+import { setSetting } from '../store/setting'
+import { getSource, supportQuality } from '../musicSdk'
+import { MusicInfo, TogglePlayMethod, playMethodNames, Quality } from '../types'
 import { parseLrc, LrcLine } from '../utils/lrc'
 import LrcView from '../components/LrcView'
 import ProgressBar from '../components/ProgressBar'
 import SongItem from '../components/SongItem'
+import { useTheme } from '../theme'
 
 const PlayDetail: React.FC<{ componentId: string }> = ({ componentId }) => {
+  const t = useTheme()
+  const c = t.colors
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: c.bg,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+    },
+    headerBtn: {
+      fontSize: 22,
+      color: c.text,
+      padding: 4,
+    },
+    headerInfo: {
+      flex: 1,
+      marginHorizontal: 12,
+      alignItems: 'center',
+    },
+    headerTitle: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: c.text,
+    },
+    headerSub: {
+      fontSize: 12,
+      color: c.weakText,
+      marginTop: 2,
+    },
+    body: {
+      flex: 1,
+    },
+    switchRow: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      paddingVertical: 8,
+    },
+    switchText: {
+      fontSize: 14,
+      color: c.weakText,
+      marginHorizontal: 14,
+      paddingBottom: 4,
+    },
+    switchActive: {
+      color: c.primary,
+      fontWeight: '700',
+      borderBottomWidth: 2,
+      borderBottomColor: c.primary,
+    },
+    lyricLoading: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    coverWrap: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    cover: {
+      width: 280,
+      height: 280,
+      borderRadius: 18,
+    },
+    coverPlaceholder: {
+      backgroundColor: c.primaryLight,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    coverIcon: {
+      fontSize: 80,
+      color: c.primary,
+    },
+    controls: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-around',
+      paddingVertical: 14,
+      paddingHorizontal: 20,
+    },
+    ctrlBtn: {
+      width: 48,
+      height: 48,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    ctrlIcon: {
+      fontSize: 22,
+    },
+    ctrlIconBig: {
+      fontSize: 28,
+      color: c.text,
+    },
+    playBtn: {
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      backgroundColor: c.primary,
+    },
+    playIcon: {
+      fontSize: 26,
+      color: c.primaryText,
+    },
+    rateText: {
+      fontSize: 15,
+      color: c.subText,
+      fontWeight: '600',
+    },
+    toolsRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      paddingHorizontal: 30,
+      paddingBottom: 16,
+    },
+    toolBtn: {
+      alignItems: 'center',
+    },
+    toolText: {
+      fontSize: 11,
+      color: c.weakText,
+      marginTop: 4,
+    },
+    modalMask: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.4)',
+      justifyContent: 'flex-end',
+    },
+    modalBody: {
+      height: '60%',
+      backgroundColor: c.card,
+      borderTopLeftRadius: 16,
+      borderTopRightRadius: 16,
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: c.divider,
+    },
+    modalTitle: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: c.text,
+    },
+    modalClose: {
+      fontSize: 14,
+      color: c.primary,
+    },
+    modalActions: {
+      flexDirection: 'row',
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+    },
+    modalActionBtn: {
+      paddingHorizontal: 12,
+      paddingVertical: 5,
+      borderRadius: 14,
+      backgroundColor: c.bg,
+      marginRight: 10,
+    },
+    modalActionText: {
+      fontSize: 12,
+      color: c.subText,
+    },
+    empty: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    emptyText: {
+      fontSize: 14,
+      color: c.weakText,
+      marginBottom: 20,
+    },
+    closeBtn: {
+      paddingHorizontal: 24,
+      paddingVertical: 8,
+      borderRadius: 18,
+      backgroundColor: c.card,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: c.divider,
+    },
+    closeText: {
+      fontSize: 14,
+      color: c.text,
+    },
+  })
   const musicInfo = useSelector((s: RootState) => s.player.musicInfo)
   const playList = useSelector((s: RootState) => s.player.playList)
   const playIndex = useSelector((s: RootState) => s.player.playIndex)
@@ -24,6 +220,7 @@ const PlayDetail: React.FC<{ componentId: string }> = ({ componentId }) => {
   const togglePlayMethod = useSelector((s: RootState) => s.player.togglePlayMethod)
   const showTranslation = useSelector((s: RootState) => s.setting['player.isShowLyricTranslation'])
   const playRate = useSelector((s: RootState) => s.player.playRate)
+  const playQuality = useSelector((s: RootState) => s.setting['player.playQuality'])
   const dispatch = useDispatch()
 
   const { position, duration } = useProgress(500)
@@ -63,8 +260,8 @@ const PlayDetail: React.FC<{ componentId: string }> = ({ componentId }) => {
     const map = new Map<number, string>()
     for (const l of transLines) map.set(l.time, l.text)
     return lyricLines.map(l => {
-      const t = map.get(l.time)
-      return t ? { ...l, text: `${l.text}\n${t}` } : l
+      const tr = map.get(l.time)
+      return tr ? { ...l, text: `${l.text}\n${tr}` } : l
     })
   }, [lyricLines, transLines, showTranslation])
 
@@ -106,6 +303,52 @@ const PlayDetail: React.FC<{ componentId: string }> = ({ componentId }) => {
     )
   }
 
+  const pickQuality = () => {
+    const qs: Quality[] = supportQuality[musicInfo.source]?.length ? supportQuality[musicInfo.source] : ['128k', '320k', 'flac']
+    const names = qs.map(q => (q === 'flac' ? '无损 FLAC' : q === 'flac24bit' ? 'Hi-Res' : q))
+    ActionSheetIOS.showActionSheetWithOptions(
+      { title: '切换音质', options: ['取消', ...names], cancelButtonIndex: 0 },
+      index => {
+        if (index > 0) void switchQuality(qs[index - 1])
+      },
+    )
+  }
+
+  const pickTimeout = () => {
+    const mins = [10, 15, 30, 60, 90]
+    const names = mins.map(m => `${m} 分钟`)
+    ActionSheetIOS.showActionSheetWithOptions(
+      { title: '定时停止播放', options: ['取消', ...names], cancelButtonIndex: 0 },
+      index => {
+        if (index > 0) {
+          const ms = mins[index - 1] * 60 * 1000
+          Alert.alert('已设置', `${mins[index - 1]} 分钟后停止播放`, [{ text: '知道了' }])
+          setTimeout(() => {
+            void require('../core/player').stopPlay()
+          }, ms)
+        }
+      },
+    )
+  }
+
+  const onRemoveMusic = (index: number) => {
+    Alert.alert('移除歌曲', `${playList[index]?.name ?? ''}`, [
+      { text: '取消', style: 'cancel' },
+      { text: '移除', style: 'destructive', onPress: () => void removeFromPlayList(index) },
+    ])
+  }
+
+  const onClearList = () => {
+    Alert.alert('清空播放列表', '将保留当前正在播放的歌曲，确定？', [
+      { text: '取消', style: 'cancel' },
+      { text: '清空', style: 'destructive', onPress: () => void clearPlayList() },
+    ])
+  }
+
+  const toggleTranslation = () => {
+    dispatch(setSetting({ 'player.isShowLyricTranslation': !showTranslation }))
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       {/* 头部 */}
@@ -135,10 +378,17 @@ const PlayDetail: React.FC<{ componentId: string }> = ({ componentId }) => {
         {showLrc ? (
           lyricLoading ? (
             <View style={styles.lyricLoading}>
-              <ActivityIndicator color="#07c556" />
+              <ActivityIndicator color={c.primary} />
             </View>
           ) : (
-            <LrcView lines={mergedLines} currentTimeMs={position * 1000} fontSize={16} lineHeight={34} />
+            <LrcView
+              lines={mergedLines}
+              currentTimeMs={position * 1000}
+              fontSize={16}
+              lineHeight={34}
+              activeColor={c.primary}
+              inactiveColor={c.weakText}
+            />
           )
         ) : (
           <View style={styles.coverWrap}>
@@ -182,6 +432,22 @@ const PlayDetail: React.FC<{ componentId: string }> = ({ componentId }) => {
         </TouchableOpacity>
       </View>
 
+      {/* 工具行：音质 / 歌词翻译 / 定时停止 */}
+      <View style={styles.toolsRow}>
+        <TouchableOpacity style={styles.toolBtn} onPress={pickQuality}>
+          <Text style={styles.rateText}>🎵</Text>
+          <Text style={styles.toolText}>{playQuality}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.toolBtn} onPress={toggleTranslation}>
+          <Text style={styles.rateText}>🌐</Text>
+          <Text style={styles.toolText}>{showTranslation ? '翻译开' : '翻译关'}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.toolBtn} onPress={pickTimeout}>
+          <Text style={styles.rateText}>⏱</Text>
+          <Text style={styles.toolText}>定时停止</Text>
+        </TouchableOpacity>
+      </View>
+
       {/* 播放列表 Modal */}
       <Modal visible={showList} animationType="slide" transparent onRequestClose={() => setShowList(false)}>
         <View style={styles.modalMask}>
@@ -190,6 +456,11 @@ const PlayDetail: React.FC<{ componentId: string }> = ({ componentId }) => {
               <Text style={styles.modalTitle}>播放列表（{playList.length}）</Text>
               <TouchableOpacity onPress={() => setShowList(false)}>
                 <Text style={styles.modalClose}>完成</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.modalActionBtn} onPress={onClearList}>
+                <Text style={styles.modalActionText}>清空列表</Text>
               </TouchableOpacity>
             </View>
             <FlatList
@@ -206,6 +477,7 @@ const PlayDetail: React.FC<{ componentId: string }> = ({ componentId }) => {
                     }
                     setShowList(false)
                   }}
+                  onLongPress={() => onRemoveMusic(index)}
                 />
               )}
             />
@@ -215,166 +487,5 @@ const PlayDetail: React.FC<{ componentId: string }> = ({ componentId }) => {
     </SafeAreaView>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
-  headerBtn: {
-    fontSize: 22,
-    color: '#1c1c1e',
-    padding: 4,
-  },
-  headerInfo: {
-    flex: 1,
-    marginHorizontal: 12,
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1c1c1e',
-  },
-  headerSub: {
-    fontSize: 12,
-    color: '#8a8a93',
-    marginTop: 2,
-  },
-  body: {
-    flex: 1,
-  },
-  switchRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    paddingVertical: 8,
-  },
-  switchText: {
-    fontSize: 14,
-    color: '#b0b0b8',
-    marginHorizontal: 14,
-    paddingBottom: 4,
-  },
-  switchActive: {
-    color: '#07c556',
-    fontWeight: '700',
-    borderBottomWidth: 2,
-    borderBottomColor: '#07c556',
-  },
-  lyricLoading: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  coverWrap: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cover: {
-    width: 280,
-    height: 280,
-    borderRadius: 18,
-  },
-  coverPlaceholder: {
-    backgroundColor: '#e8f6ee',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  coverIcon: {
-    fontSize: 80,
-    color: '#07c556',
-  },
-  controls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-  },
-  ctrlBtn: {
-    width: 48,
-    height: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  ctrlIcon: {
-    fontSize: 22,
-  },
-  ctrlIconBig: {
-    fontSize: 28,
-    color: '#1c1c1e',
-  },
-  playBtn: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#07c556',
-  },
-  playIcon: {
-    fontSize: 26,
-    color: '#ffffff',
-  },
-  rateText: {
-    fontSize: 15,
-    color: '#55555c',
-    fontWeight: '600',
-  },
-  modalMask: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'flex-end',
-  },
-  modalBody: {
-    height: '60%',
-    backgroundColor: '#ffffff',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#e5e5ea',
-  },
-  modalTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#1c1c1e',
-  },
-  modalClose: {
-    fontSize: 14,
-    color: '#07c556',
-  },
-  empty: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyText: {
-    fontSize: 14,
-    color: '#8a8a93',
-    marginBottom: 20,
-  },
-  closeBtn: {
-    paddingHorizontal: 24,
-    paddingVertical: 8,
-    borderRadius: 18,
-    backgroundColor: '#f2f2f4',
-  },
-  closeText: {
-    fontSize: 14,
-    color: '#1c1c1e',
-  },
-})
 
 export default PlayDetail

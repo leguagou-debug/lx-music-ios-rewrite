@@ -9,8 +9,114 @@ import { playList } from '../core/player'
 import SongItem from '../components/SongItem'
 import PlayBar from '../components/PlayBar'
 import { getStorage, setStorage, STORAGE_KEYS } from '../utils/storage'
+import { useTheme } from '../theme'
 
 const Search: React.FC<{ componentId: string }> = ({ componentId }) => {
+  const t = useTheme()
+  const c = t.colors
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: c.bg,
+    },
+    searchRow: {
+      flexDirection: 'row',
+      paddingHorizontal: 14,
+      paddingTop: 12,
+    },
+    input: {
+      flex: 1,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: c.bg,
+      paddingHorizontal: 16,
+      fontSize: 14,
+      color: c.text,
+    },
+    searchBtn: {
+      marginLeft: 10,
+      height: 40,
+      paddingHorizontal: 16,
+      borderRadius: 20,
+      backgroundColor: c.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    searchBtnText: {
+      fontSize: 14,
+      color: c.card,
+      fontWeight: '600',
+    },
+    sourceRow: {
+      flexDirection: 'row',
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+    },
+    sourceChip: {
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 15,
+      backgroundColor: c.bg,
+      marginRight: 8,
+    },
+    sourceChipActive: {
+      backgroundColor: c.primary,
+    },
+    sourceChipText: {
+      fontSize: 13,
+      color: c.subText,
+    },
+    sourceChipTextActive: {
+      color: c.card,
+      fontWeight: '600',
+    },
+    block: {
+      paddingHorizontal: 14,
+      paddingTop: 14,
+    },
+    blockTitle: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: c.text,
+      marginBottom: 8,
+    },
+    tagWrap: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+    },
+    tag: {
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 15,
+      backgroundColor: c.bg,
+      marginRight: 8,
+      marginBottom: 8,
+    },
+    tagText: {
+      fontSize: 13,
+      color: c.subText,
+    },
+    listContent: {
+      paddingBottom: 12,
+    },
+    loadMore: {
+      paddingVertical: 12,
+      alignItems: 'center',
+    },
+    loadMoreText: {
+      fontSize: 13,
+      color: c.primary,
+    },
+    empty: {
+      padding: 40,
+      alignItems: 'center',
+    },
+    emptyText: {
+      fontSize: 13,
+      color: c.weakText,
+    },
+  })
+
   const [keyword, setKeyword] = useState('')
   const [sourceId, setSourceId] = useState('kw')
   const [result, setResult] = useState<MusicInfo[]>([])
@@ -178,108 +284,5 @@ const Search: React.FC<{ componentId: string }> = ({ componentId }) => {
     </View>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-  },
-  searchRow: {
-    flexDirection: 'row',
-    paddingHorizontal: 14,
-    paddingTop: 12,
-  },
-  input: {
-    flex: 1,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#f2f2f4',
-    paddingHorizontal: 16,
-    fontSize: 14,
-    color: '#1c1c1e',
-  },
-  searchBtn: {
-    marginLeft: 10,
-    height: 40,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    backgroundColor: '#07c556',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  searchBtnText: {
-    fontSize: 14,
-    color: '#ffffff',
-    fontWeight: '600',
-  },
-  sourceRow: {
-    flexDirection: 'row',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
-  sourceChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 15,
-    backgroundColor: '#f2f2f4',
-    marginRight: 8,
-  },
-  sourceChipActive: {
-    backgroundColor: '#0a6b2f',
-  },
-  sourceChipText: {
-    fontSize: 13,
-    color: '#55555c',
-  },
-  sourceChipTextActive: {
-    color: '#ffffff',
-    fontWeight: '600',
-  },
-  block: {
-    paddingHorizontal: 14,
-    paddingTop: 14,
-  },
-  blockTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#1c1c1e',
-    marginBottom: 8,
-  },
-  tagWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  tag: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 15,
-    backgroundColor: '#f2f2f4',
-    marginRight: 8,
-    marginBottom: 8,
-  },
-  tagText: {
-    fontSize: 13,
-    color: '#55555c',
-  },
-  listContent: {
-    paddingBottom: 12,
-  },
-  loadMore: {
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  loadMoreText: {
-    fontSize: 13,
-    color: '#07c556',
-  },
-  empty: {
-    padding: 40,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 13,
-    color: '#b0b0b8',
-  },
-})
 
 export default Search

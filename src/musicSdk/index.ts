@@ -4,7 +4,10 @@ import kg from './kg'
 import tx from './tx'
 import wy from './wy'
 import mg from './mg'
-import type { MusicInfo, LyricInfo, Quality, SearchResult, Source } from '../types'
+import type {
+  MusicInfo, LyricInfo, Quality, SearchResult, Source,
+  SongListTag, SongListTagGroup, SongListResult, SongListDetail,
+} from '../types'
 
 export interface MusicSource {
   id: Source
@@ -15,6 +18,12 @@ export interface MusicSource {
   getLeaderboard?(): Promise<Array<{ id: string; name: string; img: string }>>
   getLeaderboardList?(id: string, page?: number, limit?: number): Promise<any>
   getHotSearch?(): Promise<Array<{ word: string }>>
+  /** 歌单标签 */
+  getSongListTags?(): Promise<{ tags: SongListTagGroup[]; hotTag: SongListTag[]; source: Source }>
+  /** 歌单列表 */
+  getSongList?(sortId: string, tagId: string, page: number): Promise<SongListResult>
+  /** 歌单详情 */
+  getSongListDetail?(id: string, page: number): Promise<SongListDetail>
 }
 
 /** 内置源列表（顺序即设置页显示顺序） */

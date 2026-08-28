@@ -7,6 +7,7 @@ import { RootState } from '../store'
 import { removeMusicFromList, clearList, renameList, removeList } from '../store/playList'
 import { playList } from '../core/player'
 import SongItem from '../components/SongItem'
+import { useTheme } from '../theme'
 
 interface Props {
   componentId: string
@@ -15,6 +16,58 @@ interface Props {
 }
 
 const SonglistDetail: React.FC<Props> = ({ componentId, listId, title }) => {
+  const t = useTheme()
+  const c = t.colors
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: c.bg,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: c.divider,
+    },
+    count: {
+      fontSize: 14,
+      color: c.weakText,
+    },
+    headerBtns: {
+      flexDirection: 'row',
+    },
+    btn: {
+      paddingHorizontal: 14,
+      paddingVertical: 6,
+      borderRadius: 16,
+      backgroundColor: c.primary,
+      marginLeft: 10,
+    },
+    btnGhost: {
+      backgroundColor: c.bg,
+    },
+    btnText: {
+      fontSize: 13,
+      color: c.card,
+      fontWeight: '600',
+    },
+    btnGhostText: {
+      fontSize: 13,
+      color: c.subText,
+    },
+    empty: {
+      padding: 40,
+      alignItems: 'center',
+    },
+    emptyText: {
+      fontSize: 13,
+      color: c.weakText,
+    },
+  })
+
   const list = useSelector((s: RootState) => s.playList.lists.find(l => l.id === listId))
   const playingMusic = useSelector((s: RootState) => s.player.musicInfo)
   const playingListId = useSelector((s: RootState) => s.player.listId)
@@ -115,55 +168,5 @@ const SonglistDetail: React.FC<Props> = ({ componentId, listId, title }) => {
     </View>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#e5e5ea',
-  },
-  count: {
-    fontSize: 14,
-    color: '#8a8a93',
-  },
-  headerBtns: {
-    flexDirection: 'row',
-  },
-  btn: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 16,
-    backgroundColor: '#07c556',
-    marginLeft: 10,
-  },
-  btnGhost: {
-    backgroundColor: '#f2f2f4',
-  },
-  btnText: {
-    fontSize: 13,
-    color: '#ffffff',
-    fontWeight: '600',
-  },
-  btnGhostText: {
-    fontSize: 13,
-    color: '#55555c',
-  },
-  empty: {
-    padding: 40,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 13,
-    color: '#b0b0b8',
-  },
-})
 
 export default SonglistDetail

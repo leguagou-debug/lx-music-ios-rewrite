@@ -74,6 +74,56 @@ export interface LeaderboardList {
 /** 热门搜索词 */
 export type HotSearch = Array<{ word: string }>
 
+/** 歌单标签 */
+export interface SongListTag {
+  id: string
+  name: string
+  source: Source
+}
+
+/** 歌单标签分类（如「语种」「场景」等分组） */
+export interface SongListTagGroup {
+  name: string
+  list: SongListTag[]
+}
+
+/** 歌单信息（广场列表项） */
+export interface SongListInfo {
+  id: string
+  name: string
+  author?: string
+  img?: string
+  play_count?: string | number
+  total?: number
+  desc?: string
+  source: Source
+}
+
+/** 歌单广场列表结果 */
+export interface SongListResult {
+  list: SongListInfo[]
+  total: number
+  page: number
+  limit: number
+  source: Source
+}
+
+/** 歌单详情结果 */
+export interface SongListDetail {
+  list: MusicInfo[]
+  page: number
+  limit: number
+  total: number
+  source: Source
+  info?: {
+    name: string
+    img?: string
+    desc?: string
+    author?: string
+    play_count?: string | number
+  }
+}
+
 /** 本地歌单 */
 export interface PlayList {
   id: string
@@ -121,6 +171,13 @@ export interface AppSetting {
   'theme.id': string
   'search.isShowHotSearch': boolean
   'search.isShowHistorySearch': boolean
+  'theme.mode': 'light' | 'dark' | 'system'
+  'theme.primaryColor': string
+  'player.timeoutExit': boolean
+  'player.timeoutExitMinutes': number
+  'player.startupPushPlayDetailScreen': boolean
+  'list.isClickPlayList': boolean
+  'common.showBackBtn': boolean
 }
 
 export const defaultSetting: AppSetting = {
@@ -149,6 +206,13 @@ export const defaultSetting: AppSetting = {
   'theme.id': 'green',
   'search.isShowHotSearch': false,
   'search.isShowHistorySearch': false,
+  'theme.mode': 'system',
+  'theme.primaryColor': '#07c556',
+  'player.timeoutExit': false,
+  'player.timeoutExitMinutes': 30,
+  'player.startupPushPlayDetailScreen': false,
+  'list.isClickPlayList': true,
+  'common.showBackBtn': true,
 }
 
 /** 循环模式 */

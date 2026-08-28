@@ -7,6 +7,7 @@ import { getSource } from '../musicSdk'
 import { MusicInfo } from '../types'
 import { playList } from '../core/player'
 import SongItem from '../components/SongItem'
+import { useTheme } from '../theme'
 
 interface BoardInfo {
   id: string
@@ -15,8 +16,88 @@ interface BoardInfo {
 }
 
 const Leaderboard: React.FC<{ componentId: string }> = ({ componentId }) => {
+  const t = useTheme()
+  const c = t.colors
   const sourceId = useSelector((s: RootState) => s.setting['common.apiSource'])
   const playingMusic = useSelector((s: RootState) => s.player.musicInfo)
+
+  const s = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: c.bg,
+    },
+    boardItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+    },
+    boardCover: {
+      width: 44,
+      height: 44,
+      borderRadius: 8,
+      backgroundColor: c.card,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: c.divider,
+    },
+    boardCoverText: {
+      fontSize: 18,
+      color: c.weakText,
+    },
+    boardName: {
+      flex: 1,
+      marginLeft: 12,
+      fontSize: 15,
+      color: c.text,
+    },
+    arrow: {
+      fontSize: 20,
+      color: c.divider,
+    },
+    listHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: c.divider,
+    },
+    listTitle: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: c.text,
+    },
+    playAllBtn: {
+      paddingHorizontal: 14,
+      paddingVertical: 6,
+      borderRadius: 16,
+      backgroundColor: c.primary,
+    },
+    playAllText: {
+      fontSize: 13,
+      color: c.primaryText,
+      fontWeight: '600',
+    },
+    loadMore: {
+      paddingVertical: 12,
+      alignItems: 'center',
+    },
+    loadMoreText: {
+      fontSize: 13,
+      color: c.primary,
+    },
+    empty: {
+      padding: 40,
+      alignItems: 'center',
+    },
+    emptyText: {
+      fontSize: 13,
+      color: c.weakText,
+    },
+  })
 
   const [boards, setBoards] = useState<BoardInfo[]>([])
   const [currentBoard, setCurrentBoard] = useState<BoardInfo | null>(null)
@@ -87,7 +168,7 @@ const Leaderboard: React.FC<{ componentId: string }> = ({ componentId }) => {
 
   if (!currentBoard) {
     return (
-      <View style={styles.container}>
+      <View style={s.container}>
         {loading ? (
           <ActivityIndicator style={{ marginTop: 40 }} color="#07c556" />
         ) : (
@@ -95,17 +176,17 @@ const Leaderboard: React.FC<{ componentId: string }> = ({ componentId }) => {
             data={boards}
             keyExtractor={item => item.id}
             renderItem={({ item }) => (
-              <TouchableOpacity style={styles.boardItem} onPress={() => openBoard(item)}>
-                <View style={styles.boardCover}>
-                  <Text style={styles.boardCoverText}>♪</Text>
+              <TouchableOpacity style={s.boardItem} onPress={() => openBoard(item)}>
+                <View style={s.boardCover}>
+                  <Text style={s.boardCoverText}>♪</Text>
                 </View>
-                <Text style={styles.boardName}>{item.name}</Text>
-                <Text style={styles.arrow}>›</Text>
+                <Text style={s.boardName}>{item.name}</Text>
+                <Text style={s.arrow}>›</Text>
               </TouchableOpacity>
             )}
             ListEmptyComponent={
-              <View style={styles.empty}>
-                <Text style={styles.emptyText}>{error || '暂无榜单'}</Text>
+              <View style={s.empty}>
+                <Text style={s.emptyText}>{error || '暂无榜单'}</Text>
               </View>
             }
           />
@@ -115,11 +196,11 @@ const Leaderboard: React.FC<{ componentId: string }> = ({ componentId }) => {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.listHeader}>
-        <Text style={styles.listTitle}>{currentBoard.name}</Text>
-        <TouchableOpacity style={styles.playAllBtn} onPress={() => list.length && onPlay(list, 0)}>
-          <Text style={styles.playAllText}>▶ 播放全部</Text>
+    <View style={s.container}>
+      <View style={s.listHeader}>
+        <Text style={s.listTitle}>{currentBoard.name}</Text>
+        <TouchableOpacity style={s.playAllBtn} onPress={() => list.length && onPlay(list, 0)}>
+          <Text style={s.playAllText}>▶ 播放全部</Text>
         </TouchableOpacity>
       </View>
       <FlatList
@@ -137,8 +218,8 @@ const Leaderboard: React.FC<{ componentId: string }> = ({ componentId }) => {
           loading ? (
             <ActivityIndicator style={{ margin: 16 }} color="#07c556" />
           ) : page < allPage ? (
-            <TouchableOpacity style={styles.loadMore} onPress={() => void loadMore()}>
-              <Text style={styles.loadMoreText}>加载更多</Text>
+            <TouchableOpacity style={s.loadMore} onPress={() => void loadMore()}>
+              <Text style={s.loadMoreText}>加载更多</Text>
             </TouchableOpacity>
           ) : null
         }
@@ -147,80 +228,5 @@ const Leaderboard: React.FC<{ componentId: string }> = ({ componentId }) => {
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-  },
-  boardItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
-  boardCover: {
-    width: 44,
-    height: 44,
-    borderRadius: 8,
-    backgroundColor: '#f2f2f4',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  boardCoverText: {
-    fontSize: 18,
-    color: '#8a8a93',
-  },
-  boardName: {
-    flex: 1,
-    marginLeft: 12,
-    fontSize: 15,
-    color: '#1c1c1e',
-  },
-  arrow: {
-    fontSize: 20,
-    color: '#c7c7cc',
-  },
-  listHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#e5e5ea',
-  },
-  listTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1c1c1e',
-  },
-  playAllBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 16,
-    backgroundColor: '#07c556',
-  },
-  playAllText: {
-    fontSize: 13,
-    color: '#ffffff',
-    fontWeight: '600',
-  },
-  loadMore: {
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  loadMoreText: {
-    fontSize: 13,
-    color: '#07c556',
-  },
-  empty: {
-    padding: 40,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 13,
-    color: '#b0b0b8',
-  },
-})
 
 export default Leaderboard

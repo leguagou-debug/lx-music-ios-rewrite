@@ -2,6 +2,7 @@
 import React, { useRef } from 'react'
 import { View, Text, TouchableWithoutFeedback, PanResponder, StyleSheet } from 'react-native'
 import { formatInterval } from '../utils/format'
+import { useTheme } from '../theme'
 
 interface Props {
   progress: number // 0-1
@@ -12,6 +13,32 @@ interface Props {
 }
 
 const ProgressBar: React.FC<Props> = ({ progress, nowTime, maxTime, onSeek, height = 4 }) => {
+  const t = useTheme()
+  const c = t.colors
+  const styles = StyleSheet.create({
+    wrap: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 14,
+    },
+    time: {
+      fontSize: 11,
+      color: c.weakText,
+      width: 42,
+      textAlign: 'center',
+    },
+    track: {
+      flex: 1,
+      backgroundColor: c.divider,
+      borderRadius: 2,
+      overflow: 'hidden',
+    },
+    fill: {
+      height: '100%',
+      backgroundColor: c.primary,
+      borderRadius: 2,
+    },
+  })
   const containerRef = useRef<View>(null)
   const widthRef = useRef(0)
 
@@ -47,30 +74,5 @@ const ProgressBar: React.FC<Props> = ({ progress, nowTime, maxTime, onSeek, heig
     </View>
   )
 }
-
-const styles = StyleSheet.create({
-  wrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-  },
-  time: {
-    fontSize: 11,
-    color: '#8a8a93',
-    width: 42,
-    textAlign: 'center',
-  },
-  track: {
-    flex: 1,
-    backgroundColor: '#d9d9de',
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  fill: {
-    height: '100%',
-    backgroundColor: '#07c556',
-    borderRadius: 2,
-  },
-})
 
 export default ProgressBar

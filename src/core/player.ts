@@ -10,6 +10,8 @@ import {
   setStatusText,
   setLastLyric,
   setProgress,
+  setPlayList,
+  clearPlayState,
 } from '../store/player'
 import { getSource } from '../musicSdk'
 import { MusicInfo, TogglePlayMethod, Quality } from '../types'
@@ -218,6 +220,56 @@ const loadLyric = async (musicInfo: MusicInfo): Promise<void> => {
 export const stopPlay = async (): Promise<void> => {
   await TrackPlayer.stop()
   store.dispatch(setIsPlay(false))
+}
+
+/** 移除播放列表中某一首（若移除的是当前曲则跳到下一首） */
+export const removeFromPlayList = async (index: number): Promise<void> => {
+  const state = store.getState().player
+  if (index < 0 || index >= state.playList.length) return
+  const newList = state.playList.filter((_, i) => i !== index)
+  if (!newList.length) {
+    store.dispatch(clearPlayState())
+    await TrackPlayer.stop()
+    return
+  }
+  // 更新索引：被移除的在当前曲之前则减一
+  let newIndex = state.playIndex
+  if (index < state.playIndex) {
+    newIndex = state.playIndex - 1
+  } else if (index === state.playIndex) {
+    newIndex = Math.min(state.playIndex, newList.length - 1)
+    await playByIndex(newIndex)
+    return
+  }
+  store.dispatch(setPlayList({ playList: newList, listId: state.listId }))
+  store.dispatch(setPlayIndex(newIndex))
+  // 同步底层队列：重建队列
+  await TrackPlayer.reset()
+  await TrackPlayer.add(newList.map(m => ({ id: `${m.source}_${m.songmid}`, url: '', title: m.name, artist: m.singer, duration: m.interval })))
+  await TrackPlayer.skip(newIndex)
+  if (state.isPlay) await TrackPlayer.play()
+}
+
+/** 清空播放列表 */
+export const clearPlayList = async (): Promise<void> => {
+  const state = store.getState().player
+  const current = state.musicInfo
+  store.dispatch(clearPlayState())
+  await TrackPlayer.reset()
+  if (current) {
+    // 保留当前曲目为单曲列表
+    store.dispatch(setPlayState({ playList: [current], musicInfo: current, playIndex: 0, listId: null }))
+    await TrackPlayer.add([{ id: `${current.source}_${current.songmid}`, url: '', title: current.name, artist: current.singer, duration: current.interval }])
+  }
+}
+
+/** 切换音质并重新加载当前曲 */
+export const switchQuality = async (quality: Quality): Promise<void> => {
+  store.dispatch({ type: 'setting/setSetting', payload: { 'player.playQuality': quality } })
+  const state = store.getState().player
+  if (state.musicInfo) {
+    await playByIndex(state.playIndex)
+  }
 }
 
 /** 注册播放器全局事件（后台播放完成自动下一首） */

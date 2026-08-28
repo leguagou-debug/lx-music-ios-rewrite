@@ -9,6 +9,8 @@ import Settings from './screens/Settings'
 import PlayDetail from './screens/PlayDetail'
 import Leaderboard from './screens/Leaderboard'
 import SonglistDetail from './screens/SonglistDetail'
+import SongList from './screens/SongList'
+import OnlineSonglistDetail from './screens/OnlineSonglistDetail'
 
 /** 屏幕注册表 */
 export const SCREENS = {
@@ -18,6 +20,8 @@ export const SCREENS = {
   PlayDetail,
   Leaderboard,
   SonglistDetail,
+  SongList,
+  OnlineSonglistDetail,
 } as const
 
 export type ScreenName = keyof typeof SCREENS

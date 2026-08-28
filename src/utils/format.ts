@@ -48,6 +48,15 @@ export const decodeName = (str: string): string => {
   }
 }
 
+/** 格式化播放量（12345 → 1.2万） */
+export const formatPlayCount = (num: number | string | undefined): string => {
+  const n = parseInt(String(num ?? 0), 10)
+  if (Number.isNaN(n) || n <= 0) return ''
+  if (n > 100000000) return `${Math.floor(n / 10000000) / 10}亿`
+  if (n > 10000) return `${Math.floor(n / 1000) / 10}万`
+  return String(n)
+}
+
 /** 简繁转换占位（isS2t 时用；此处保持原样，完整实现可换 opencc-js） */
 export const s2t = (str: string): string => str
 

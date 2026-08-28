@@ -7,8 +7,77 @@ import { RootState } from '../store'
 import { togglePlay } from '../core/player'
 import { formatInterval } from '../utils/format'
 import { getSourceName } from '../musicSdk'
+import { useTheme } from '../theme'
 
 const PlayBar: React.FC<{ componentId?: string }> = ({ componentId }) => {
+  const t = useTheme()
+  const c = t.colors
+  const styles = StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: c.card,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: c.divider,
+    },
+    main: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    cover: {
+      width: 44,
+      height: 44,
+      borderRadius: 8,
+      backgroundColor: c.bg,
+    },
+    coverPlaceholder: {
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    coverText: {
+      fontSize: 18,
+      color: c.weakText,
+    },
+    info: {
+      flex: 1,
+      marginLeft: 10,
+    },
+    title: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: c.text,
+    },
+    subtitle: {
+      fontSize: 12,
+      color: c.weakText,
+      marginTop: 2,
+    },
+    progressTrack: {
+      height: 2,
+      borderRadius: 1,
+      backgroundColor: c.divider,
+      marginTop: 5,
+      overflow: 'hidden',
+    },
+    progressFill: {
+      height: 2,
+      backgroundColor: c.primary,
+    },
+    btn: {
+      marginLeft: 12,
+      width: 40,
+      height: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    playIcon: {
+      fontSize: 22,
+      color: c.text,
+    },
+  })
   const musicInfo = useSelector((s: RootState) => s.player.musicInfo)
   const isPlay = useSelector((s: RootState) => s.player.isPlay)
   const nowPlayTime = useSelector((s: RootState) => s.player.nowPlayTime)
@@ -54,72 +123,5 @@ const PlayBar: React.FC<{ componentId?: string }> = ({ componentId }) => {
     </View>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f7',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: '#d9d9de',
-  },
-  main: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  cover: {
-    width: 44,
-    height: 44,
-    borderRadius: 8,
-    backgroundColor: '#e3e3e8',
-  },
-  coverPlaceholder: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  coverText: {
-    fontSize: 18,
-    color: '#8a8a93',
-  },
-  info: {
-    flex: 1,
-    marginLeft: 10,
-  },
-  title: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1c1c1e',
-  },
-  subtitle: {
-    fontSize: 12,
-    color: '#8a8a93',
-    marginTop: 2,
-  },
-  progressTrack: {
-    height: 2,
-    borderRadius: 1,
-    backgroundColor: '#d9d9de',
-    marginTop: 5,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: 2,
-    backgroundColor: '#07c556',
-  },
-  btn: {
-    marginLeft: 12,
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  playIcon: {
-    fontSize: 22,
-    color: '#1c1c1e',
-  },
-})
 
 export default PlayBar
